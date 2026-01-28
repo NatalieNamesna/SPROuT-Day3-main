@@ -51,3 +51,8 @@ rsconnect/
 Presentation/presentation_raw.pdf
 .DS_Store
 .quarto
+
+# Figures & output (excludes all figure files)
+*.png
+*.pdf
+*.jpeg
