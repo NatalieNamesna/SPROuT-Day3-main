@@ -1,0 +1,2621 @@
+---
+format: 
+  revealjs:
+    slide-number: true
+    theme: [default, custom_theme.scss]
+    embed-resources: true
+    preview-links: false
+    output-file: "presentation"
+    output-ext: "html"
+    include-in-header: "fonts-include.html"
+    highlight-style: github-light
+---
+
+```{r}
+#| label: setup
+#| include: false
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+if(!require("countdown")) install.packages("countdown")
+
+library(countdown)
+
+if (!require("here")) install.packages("here")
+
+library(here)
+
+here::i_am("Presentation/presentation.qmd")
+
+source(
+  here::here("R/00_Config_file.R")
+)
+
+path_materials <-
+  "Presentation/Materials"
+
+include_local_figure <- function(data_source) {
+  knitr::include_graphics(
+    path = here::here(
+      path_materials,
+      data_source
+    ),
+    error = TRUE
+  )
+}
+```
+
+```{r}
+#| label: dynamic link generation
+#| include: false
+project_name <- 
+  basename(here::here())
+
+# Create a cleaner display name for the lecture
+display_name <- 
+  gsub("SPROuT-", "", project_name) %>%
+  gsub("([0-9])", " \\1", .) %>%
+  toupper()
+
+# Create dynamic URLs
+github_url <- 
+  paste0(
+    "https://github.com/CUNI-SPRouT/",
+     project_name
+  )
+
+slides_url <- 
+  paste0(
+    "https://cuni-sprout.github.io/", 
+    project_name, "/"
+  )
+```
+
+```{r}
+#| label: qr-code-generation
+#| include: false
+
+# Load required packages for QR code generation
+if (!require("qrcode")) install.packages("qrcode")
+library(qrcode)
+
+# Create QR directory if it doesn't exist
+qr_dir <- here::here(path_materials, "QR")
+if (!dir.exists(qr_dir)) {
+  dir.create(qr_dir, recursive = TRUE)
+}
+
+# Generate QR code for slides
+qr_slides <-
+  qrcode::qr_code(
+    slides_url,
+    ecl = "M"
+  )
+
+qrcode::generate_svg(
+  qr_slides,
+  filename = here::here(path_materials, "QR/qr_slides.svg"),
+  foreground = sprout_cols["white"],
+  background = sprout_cols["asparagus"],
+  show = FALSE
+)
+
+# Generate QR code for GitHub
+qr_github <-
+  qrcode::qr_code(
+    github_url,
+    ecl = "M"
+  )
+
+qrcode::generate_svg(
+  qr_github,
+  filename = here::here(path_materials, "QR/qr_github.svg"),
+  foreground = sprout_cols['white'],
+  background = sprout_cols['asparagus'],
+  show = FALSE
+)
+```
+
+# {.title}
+
+
+:::: {.columns}
+
+::: {.column width="30%"}
+:::
+
+::: {.column width="40%"}
+
+```{r}
+#| label: sprout-logo-title
+include_local_figure("Logos/sprout_logo_nobg.png")
+```
+
+:::
+
+::: {.column width="30%"}
+:::
+
+::::
+
+:::: {.r-hstack}
+::: {data-id="box1" style="background: `r sprout_cols['prussian_blue']`; width: 135px; height: 15px; margin: 0px;"}
+:::
+
+::: {data-id="box2" style="background: `r sprout_cols['moonstone']`; width: 405px; height: 15px; margin: 0px;"}
+:::
+
+::: {data-id="box3" style="background: `r sprout_cols['white']`; width: 225px; height: 15px; margin: 0px;"}
+:::
+
+::: {data-id="box4" style="background: `r sprout_cols['tea_green']`; width: 135px; height: 15px; margin: 0px;"}
+:::
+::::
+
+::: {.text-color-white .text-font-heading .text-size-heading1 .text-bold}
+`r display_name`
+:::
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="10%"}
+
+:::
+
+::: {.column width="90%" .text-right .text-size-body .text-bold}
+[👤](https://ondrejmottl.github.io/)Ondřej Mottl
+
+[Science Powered through Reproducibility, Openness, and Teamwork]{.text-color-black}
+
+[github.com/CUNI-SPROuT](https://github.com/CUNI-SPROuT)
+:::
+
+::::
+
+## This presentation {.title}
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="70%"}
+::: {.r-fit-text}
+[😸 Code on GitHub](`r github_url`)
+
+[🖥️ Slides](`r slides_url`)
+
+[![](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)](LICENSE)
+:::
+:::
+
+::: {.column width="30%"}
+```{r}
+#| label: qr_slides
+include_local_figure("QR/qr_slides.svg")
+```
+:::
+
+::::
+
+## SAVE {.text-center}
+ 
+```{r}
+#| label: version-control-meme
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/phd101212s.gif")
+```
+
+::: {.text-center}
+[Never lose your work again]{.text-highlight-prussian_blue}
+:::
+
+# [MORNING SESSION]{.bold .r-fit-text} {.title}
+
+[Version Control Fundamentals]{.r-fit-text}
+
+## Learning Outcomes
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="45%" .incremental}
+
+### 🎯 **What we'll cover**
+
+- What is version control and why it matters
+- Git vs GitHub
+- Basic Git workflow (init, commit, push, pull)
+- Working with remote repositories
+
+:::
+
+::: {.column width="55%" .incremental}
+
+### ✅ **By the end, you'll be able to:**
+
+- Initialize Git repositories for R projects
+- Make commits and write meaningful messages
+- Push and pull changes to/from GitHub
+- Clone existing repositories
+
+
+:::
+::::
+
+# [GAME TIME]{.bold .r-fit-text} {.title}
+
+# [What is Version Control?]{.bold .r-fit-text} {.title}
+
+## 
+
+```{r}
+#| label: VersionControl
+include_local_figure("Scriberia/VersionControl.jpg")
+```
+
+::: {.text-center}
+It is all about [keeping track]{.text-highlight-prussian_blue} of [changes]{.text-highlight-asparagus} 📓✍️
+:::
+
+::: footer
+[This image was created by Scriberia for The Turing Way community and is used under a CC-BY licence](https://zenodo.org/doi/10.5281/zenodo.3332807)
+:::
+
+## [Discussion]{.text-size-heading2} {.exercise}
+
+`r countdown(minutes = 10)`
+
+:::: columns
+
+::: {.column width="50%"}
+
+### Do you recognize some of these questions?
+
+* *It broke … hopefully I have a working version somewhere?*
+* *Can you please send me the latest version?*
+* *Which version are you using?*
+* *I am sure it used to work. When did it change?*
+* *My laptop is gone. Is my data now gone?*
+
+:::
+
+::: {.column width="50%" }
+
+### How do you keep track of changes?
+
+```{r}
+#| label: version-nightmare
+knitr::include_graphics("https://ecorepsci.github.io/reproducible-science/img/version-nightmare.png")
+```
+
+:::
+
+::::
+
+::: footer
+[Reproducible Data Science](https://ecorepsci.github.io/reproducible-science/index.html)
+:::
+
+## The Journey
+
+```{r}
+#| label: version-control-journey
+include_local_figure("Scriberia/ReproducibleJourney.jpg")
+```
+
+::: footer
+[This image was created by Scriberia for The Turing Way community and is used under a CC-BY licence](https://zenodo.org/doi/10.5281/zenodo.3332807)
+:::
+
+# [Git/GitHub Setup]{.bold .r-fit-text} {.title}
+
+## Git/GitHub setup AKA "git hell"
+
+```{r}
+#| label: ErrorManagement
+include_local_figure("Scriberia/ErrorManagement.jpg")
+```
+
+::: {.blockquote}
+Getting all the necessary software installed, configured, and playing nicely together is honestly half the battle ... **Brace yourself for some pain**
+:::
+
+::: footer
+[Happy Git and GitHub for the useR](https://happygitwithr.com/install-intro) |
+[This image was created by Scriberia for The Turing Way community and is used under a CC-BY licence](https://zenodo.org/doi/10.5281/zenodo.3332807)
+:::
+
+## Setup resources
+
+Comprehensive guides:
+
+* [Happy Git and GitHub for the useR](https://happygitwithr.com/)
+* [biostats: Version control with GitHub and RStudio](https://biostats-r.github.io/biostats/github/1_Git_Tutorial.html)
+* [{usethis} tutorial](https://usethis.r-lib.org/articles/usethis-setup.html#install-git)
+* [RStudio Git documentation](https://docs.posit.co/ide/user/ide/guide/tools/version-control.html)
+
+Full setup presentation: [Version Control - git hell](https://ondrejmottl.github.io/VersionControl_gitHell/)
+
+## Software overview {.text-center}
+
+:::: columns
+
+::: {.column width="10%" }
+:::
+
+::: {.column width="35%"}
+
+### Git {.text-center}
+
+* [Local software]{.text-highlight-prussian_blue}
+* Keep track of changes of files 
+* Works offline
+* **You need to install it!**
+
+```{r}
+#| label: git-logo
+#| fig-width: 1
+#| fig-height: 1 
+include_local_figure("Logos/Git_icon.svg.png")
+```
+
+:::
+
+::: {.column width="10%" }
+:::
+
+::: {.column width="35%" }
+
+### GitHub {.text-center}
+
+* [Host server]{.text-highlight-asparagus}
+* Store (git) the data
+* Project management
+* Collaboration
+* **You need an account!**
+
+```{r}
+#| label: github-logo
+include_local_figure("Logos/GH_logo.png")
+```
+
+:::
+
+::: {.column width="10%" }
+:::
+
+
+::::
+
+## Step 1: Create GitHub account
+
+You will need a [GitHub account]{.text-highlight-prussian_blue}.
+
+Go to [GitHub.com](https://github.com/) and follow the instructions.
+
+<br>
+
+### 💡 **Tips**
+
+* Use a [professional username]{.text-highlight-asparagus}, preferably your name
+* Use [university/science institute email]{.text-highlight-moonstone} address
+  * Gain access to [GitHub Education](https://education.github.com/)
+  * Free private repositories and other perks!
+
+## Step 2: Install Git
+
+Check if Git is already installed. Open Command Prompt (`cmd` in Windows search) and check your version:
+
+```{bash}
+#| label: git-version-check
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git --version
+```
+
+If not installed, download and install:
+
+::::: {.panel-tabset}
+
+### Windows
+
+Download and install [Git for Windows](https://gitforwindows.org/)
+
+### MacOS
+
+Download and install [Git for MacOS](https://git-scm.com/download/mac)
+
+### Linux
+
+Ubuntu or Debian Linux:
+```{bash}
+#| label: git-install-linux-ubuntu
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+sudo apt-get install git
+```
+
+Fedora or RedHat Linux:
+```{bash}
+#| label: git-install-linux-fedora
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+sudo yum install git
+```
+
+:::::
+
+## Step 3: Configure Git
+
+Introduce yourself to Git 👋
+
+::: {.blockquote}
+❗ Substitute your name and email address ❗
+:::
+
+Use the [same email]{.text-highlight-prussian_blue} as your [GitHub account]{.text-highlight-asparagus}:
+
+```{bash}
+#| label: git-config-setup
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git config --global user.name "Jane Doe"
+git config --global user.email "jane@example.com"
+git config --global --list
+```
+
+## Step 4: Connect RStudio to Git
+
+Configure Git in your R session:
+
+```{r}
+#| label: git-config-usethis-setup
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+# Replace with your name and email
+usethis::use_git_config(
+  user.name = "Jane Doe", 
+  user.email = "jane@example.com"
+)
+```
+
+This sets up Git to work with RStudio projects.
+
+## Step 5: Create GitHub PAT
+
+**PAT** = [P]{.text-highlight-prussian_blue}ersonal [A]{.text-highlight-prussian_blue}ccess [T]{.text-highlight-prussian_blue}oken
+
+This allows RStudio to communicate with GitHub:
+
+```{r}
+#| label: pat-create-setup
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+usethis::create_github_token()
+```
+
+1. This opens GitHub in your browser
+2. Click [Generate token]{.text-highlight-asparagus}
+3. [Copy the token]{.text-highlight-moonstone} to a safe place
+
+::: {.blockquote}
+⚠️ You won't be able to see this token again! ⚠️
+:::
+
+## Step 6: Store GitHub PAT
+
+Add the PAT to RStudio:
+
+```{r}
+#| label: pat-store-setup
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+gitcreds::gitcreds_set()
+```
+
+When prompted, paste your PAT (choose "**Replace these credentials**" option).
+
+<br>
+
+### Verify setup
+
+```{r}
+#| label: verify-setup
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+# Check GitHub connection
+gh::gh_whoami()
+
+# Comprehensive situation report
+usethis::git_sitrep()
+```
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Verify you have Git installed (`git --version`)
+2. Check your Git configuration (`git config --global --list`)
+3. Test GitHub connection (`gh::gh_whoami()`)
+4. Run situation report (`usethis::git_sitrep()`)
+:::
+
+`r countdown(minutes = 15)`
+
+## Weapon of choice (GUI) {.text-center}
+
+**GUI** = [G]{.text-highlight-prussian_blue}raphical [U]{.text-highlight-prussian_blue}ser [I]{.text-highlight-prussian_blue}nterface
+
+We will primarily use [RStudio]{.text-highlight-asparagus}, but also show [GitHub Desktop]{.text-highlight-moonstone} examples:
+
+:::: {.columns}
+
+::: {.column width="45%" .text-center}
+
+<br>
+<br>
+
+```{r}
+#| label: rstudio-logo
+#| fig-width: 1
+#| fig-height: 1
+include_local_figure("Logos/RStudio_logo_flat.svg.png")
+```
+
+### [RStudio](https://rstudio.com/) 
+:::
+
+::: {.column width="10%"}
+:::
+
+::: {.column width="35%" .text-center}
+```{r}
+#| label: github-desktop-logo-setup
+#| fig-width: 1
+#| fig-height: 1
+include_local_figure("Logos/Github-desktop-logo-symbol.svg.png")
+```
+
+### [GitHub Desktop](https://desktop.github.com/)
+:::
+
+::: {.column width="10%"}
+:::
+
+::::
+
+You can also use the [Terminal]{.text-highlight-moonstone} for advanced operations.
+
+## Basic vocabulary
+
+:::: columns
+
+::: {.column width="50%" .incremental}
+
+* [Script]{.text-highlight-prussian_blue} is a record of code
+* [R Project]{.text-highlight-prussian_blue} is self-contained project/study/paper containing R scripts, data, figures, etc.
+* Every such project is called [repository]{.text-highlight-asparagus} (ie a *repo*) 
+* Your **local** repository is called [local]{.text-highlight-moonstone}
+* Your **online** repository is called [remote]{.text-highlight-moonstone}
+
+:::
+
+:::{.column width="50%" .fragment}
+
+<br>
+
+```{r}
+#| label: local-remote
+knitr::include_graphics("https://user.oc-static.com/upload/2022/01/04/16412576933806_image30.png")
+```
+:::
+
+::::
+
+::: footer
+[https://openclassrooms.com/](https://openclassrooms.com/en/courses/7476131-manage-your-code-project-with-git-and-github/7681891-work-in-your-local-git-repository)
+::: 
+
+## [Note on practical exercises]{.r-fit-text} {.subtitle}
+
+```{r}
+#| label: practical-exercise-note
+include_local_figure("Monkey/monkey_nobg.png")
+```
+
+::: footer
+[image by adiasarahma](https://www.deviantart.com/adiasarahma/)
+:::
+
+# [Git Basics]{.bold .r-fit-text} {.title}
+
+## Git init (project first)
+
+Activate [git]{.text-highlight-prussian_blue} for a repo 
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: {.columns}
+
+::: {.column width="50%"}
+For existing project:
+
+1. Run [`usethis::use_git()`]{.text-highlight-asparagus} to initialize Git
+2. Restart RStudio when prompted
+3. A [Git]{.text-highlight-moonstone} tab appears in the top-right pane
+
+```{r}
+#| label: git-init-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+usethis::use_git()
+```
+
+:::
+
+
+::: {.column width="50%"}
+
+Create new project with git tracking:
+
+1. Create project with [`usethis::create_project()`]{.text-highlight-prussian_blue}
+2. Switch to the new project
+3. Run [`usethis::use_git()`]{.text-highlight-asparagus} to initialize
+
+
+```{r}
+#| label: git-init-rstudio-new
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+usethis::create_project("<DIRECTORY>")
+# switch to the new project
+usethis::use_git()
+```
+:::
+
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+For existing project: [File]{.text-highlight-prussian_blue} → [Add Local Repository]{.text-highlight-asparagus}
+
+Create new project: [File]{.text-highlight-prussian_blue} → [New Repository]{.text-highlight-asparagus}
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-new-repo
+knitr::include_graphics("https://docs.github.com/assets/cb-143755/mw-1440/images/help/desktop/lets-get-started.webp")
+```
+:::
+
+::::
+
+
+### Command line
+
+For existing project
+
+```{bash}
+#| label: git-init-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git init
+```
+
+Create new project with git tracking
+
+```{bash}
+#| label: git-init-cl-new
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git init <DIRECTORY>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote} 
+1. Make a new project with Git tracking
+2. Use `usethis::use_git()` or Terminal command
+:::
+
+`r countdown(minutes = 15)`
+
+## Git clone (repo first)
+
+Copy (download) from [remote repo]{.text-highlight-prussian_blue} to [local]{.text-highlight-asparagus} machine
+
+Example of online repo: [CUNI-SPRouT/VersionControl-playground](https://github.com/CUNI-SPRouT/VersionControl-playground)
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Run [`usethis::reate_from_github()`]{.text-highlight-asparagus}
+2. Provide the [repository URL]{.text-highlight-moonstone}
+3. Specify [destination directory]{.text-highlight-tea_green}
+4. RStudio opens new project automatically
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: git-clone-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+usethis::create_from_github(
+  repo_spec = "https://github.com/<OWNER>/<REPO>.git",
+  destdir = "<DIRECTORY>",
+  fork = FALSE
+)
+```
+:::
+
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Open GitHub Desktop
+2. [File]{.text-highlight-prussian_blue} → [Clone Repository]{.text-highlight-asparagus}
+3. Choose from:
+   - Your GitHub repos
+   - Organization repos
+   - Or paste URL
+4. Select local path
+5. Click [Clone]{.text-highlight-moonstone}
+:::
+
+::: {.column width="50%"}
+
+<br>
+
+```{r}
+#| label: ghd-clone
+knitr::include_graphics("https://docs.github.com/assets/cb-10969/mw-1440/images/help/desktop/clone-file-menu-windows.webp")
+```
+:::
+
+::::
+
+### Command line
+
+```{bash}
+#| label: git-clone-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git clone https://github.com/<OWNER>/<REPO>.git <DIRECTORY>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote} 
+Clone a repo (e.g. any repo from [CUNI-SPROuT](https://github.com/orgs/CUNI-SPRouT/repositories))
+:::
+
+`r countdown(minutes = 15)`
+
+# [Making Commits]{.bold .r-fit-text} {.title}
+
+## A commit
+
+A [**commit**]{.text-highlight-prussian_blue} is a [record]{.text-highlight-asparagus} of a change
+
+If you create or edit a file in your repository and save the changes, you need to [record]{.text-highlight-asparagus} your change via a [**commit**]{.text-highlight-prussian_blue}
+
+::::: {.fragment}
+
+### Chess analogy? 
+
+:::: columns
+
+::: {.column width="45%"}
+
+```{r}
+#| label: chess
+knitr::include_graphics("https://www.wikihow.com/images/thumb/0/06/Play-Chess-Step-28-Version-5.jpg/aid54279-v4-728px-Play-Chess-Step-28-Version-5.jpg")
+```
+
+:::
+
+::: {.column width="45%" }
+
+**Chess move diary**:
+
+* Bc4 (Bishop to c4)
+* Nf3 (Knight to f3)
+* Qc7 (Queen to c7)
+
+:::
+
+::::
+
+:::::
+
+::: footer
+[wikiHow: How to Play Chess?](https://www.wikihow.com/Play-Chess)
+:::
+
+## A commit
+
+:::: columns
+::: {.column width="45%" .text-center} 
+```{r}
+#| label: git1-chess
+knitr::include_graphics("https://www.wikihow.com/images/thumb/c/c3/Play-Chess-Step-24-Version-5.jpg/aid54279-v4-728px-Play-Chess-Step-24-Version-5.jpg")
+```
+
+*Pawn to d4*
+:::
+
+::: {.column width="45%" .text-center .fragment}
+```{r}
+#| label: git01
+include_local_figure("git/git01.png")
+```
+
+*Edit line 32 of file A*
+:::
+::::
+
+::: footer
+[wikiHow: How to Play Chess?](https://www.wikihow.com/Play-Chess)
+:::
+
+## A commit
+
+<br>
+<br>
+
+```{r}
+#| label: git02
+include_local_figure("git/git02.png")
+```
+
+## 3 states of a file 
+
+<br>
+
+:::: columns
+::: {.column width="29%"}
+```{r}
+#| label: git-stage-scheme
+knitr::include_graphics("https://git-scm.com/images/about/index1@2x.png")
+```
+:::
+
+::: {.column width="60%" .fragment}
+```{r}
+#| label: git-stage-draw
+knitr::include_graphics("https://i0.wp.com/jessitron.com/wp-content/uploads/2012/12/27eb8-screenshot2012-12-09at2.07.55pm.png")
+```
+:::
+::::
+
+::: footer
+[git---everything-is-local](https://git-scm.com/)
+
+[jessitron](https://jessitron.com/2012/12/09/git-the-many-parts-five-categories-of-files/)
+:::
+
+## Staging changes
+
+Make a change to a file and save it. Now *stage* the change:
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: columns
+::: {.column width="50%"}
+In the [Git]{.text-highlight-prussian_blue} tab (top-right pane):
+
+1. Modified files appear with [status symbols]{.text-highlight-asparagus}
+2. Click [checkbox]{.text-highlight-moonstone} next to file to stage
+3. View diff by clicking on filename
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: git-stage-rstudio
+knitr::include_graphics("https://annakrystalli.me/talks/assets/git_tab.png")
+```
+
+:::
+
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+In the left sidebar [Changes]{.text-highlight-prussian_blue} panel:
+
+* [Checkmark]{.text-highlight-asparagus} = staged (will be committed)
+* [Empty box]{.text-highlight-moonstone} = unstaged
+
+Click checkboxes to stage/unstage individual files
+
+All files are staged by default when you modify them
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-changes
+knitr::include_graphics("https://docs.github.com/assets/cb-16555/mw-1440/images/help/desktop/commit-all.webp")
+```
+:::
+
+::::
+
+
+### Command line
+
+Stage changes:
+
+```{bash}
+#| label: git-stage-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git add <FILE>
+```
+
+Unstage changes:
+
+```{bash}
+#| label: git-unstage-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git reset <FILE>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote} 
+1. Make changes to (a) file(s)
+2. Make a new file
+3. Stage and unstage the changes
+:::
+
+`r countdown(minutes = 20)`
+
+## A first commit
+
+Commit (record) *staged* changes:
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Click [Commit]{.text-highlight-prussian_blue} button in Git tab
+2. Review [staged files]{.text-highlight-asparagus} (checked boxes)
+3. View [diff]{.text-highlight-moonstone} in bottom pane
+4. Write [commit message]{.text-highlight-tea_green} in top-right
+5. Click [Commit]{.text-highlight-prussian_blue} button to confirm
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: git-commit-rstudio
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/19_commit_window.png")
+```
+:::
+
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Review changed files in left panel
+2. Write [commit message]{.text-highlight-prussian_blue} in bottom left
+3. Optionally add [description]{.text-highlight-asparagus}
+4. Click [Commit to main]{.text-highlight-moonstone} (or current branch)
+
+View history in [History]{.text-highlight-tea_green} tab
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-commit
+knitr::include_graphics("https://user-images.githubusercontent.com/359239/43204294-df0e02b8-8ff6-11e8-9a6d-e1ceb6e460e2.png")
+```
+
+:::
+
+::::
+
+### Command line
+
+```{bash}
+#| label: git-commit-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git commit -m "commit message"
+```
+
+:::::
+
+## Review history
+
+:::: columns
+
+:::{.column width="60%"}
+
+```{bash}
+#| label: git-commit-dissection
+#| echo: true
+#| eval: false
+#| code-line-numbers: true
+$ git log --stat
+commit 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Sat Mar 15 16:40:33 2008 -0700
+
+    Remove unnecessary test
+
+ lib/simplegit.rb | 5 -----
+ 1 file changed, 5 deletions(-)
+
+commit a11bef06a3f659402fe7563abf99ad00de2209e6
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Sat Mar 15 10:31:28 2008 -0700
+
+    Initial commit
+
+ README           |  6 ++++++
+ Rakefile         | 23 +++++++++++++++++++++++
+ lib/simplegit.rb | 25 +++++++++++++++++++++++++
+ 3 files changed, 54 insertions(+)
+```
+
+:::
+
+:::{.column width="40%"}
+
+### Dissecting a commit
+
+**SHA** - unique identifier
+
+**Author** - who has done this?
+
+**Date** - when was this done?
+
+**Message** - description of what has been done
+
+**Stats** - what has changed?
+
+:::
+
+::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote} 
+1. Commit some changes
+2. Review history
+:::
+
+`r countdown(minutes = 20)`
+
+## Commit message
+
+Commits are **quick** and **cheap**. Therefore:
+
+1. Commit [**often** (!)]{.text-highlight-prussian_blue} 
+2. Provide [**useful**]{.text-highlight-asparagus} commit messages
+
+:::: columns
+
+::: {.column width="20%"}
+:::
+
+::: {.column width="60%" .fragment}
+```{r}
+#| label: commit-message
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/20_git_commit.png")
+```
+:::
+
+::: {.column width="20%"}
+:::
+
+::::
+
+## Commit history
+
+```{r}
+#| label: commit-history
+knitr::include_graphics("https://happygitwithr.com/img/commit-diff-sha-tag.png")
+```
+
+::: footer
+[Happy Git and GitHub for the useR](https://happygitwithr.com/install-intro)
+:::
+
+# [Working with Remote]{.bold .r-fit-text} {.title}
+
+## Remote workflow
+
+```{r}
+#| label: git-remote
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/0_workflow_git.png")
+```
+
+::: footer
+[biostats: Version control with GitHub and RStudio](https://biostats-r.github.io/biostats/github/1_Git_Tutorial.html)
+:::
+
+## Update remote - PUSH
+
+Now we need to *sync* changes with the [remote]{.text-highlight-prussian_blue} using [**PUSH**]{.text-highlight-asparagus}
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: {.columns}
+
+::: {.column width="45%"}
+Add a remote (publish to GitHub - only once):
+
+1. Run [`usethis::use_github()`]{.text-highlight-prussian_blue}
+   - Automatically creates GitHub repo and connects
+   - Opens browser to confirm authentication
+
+
+```{r}
+#| label: git-mk-remote-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+usethis::use_github(protocol = "https")
+```
+:::
+
+::: {.column width="5%"}
+
+:::
+::: {.column width="50%"}
+
+Push changes (after first publish):
+
+1. Click [Push]{.text-highlight-moonstone} button (green arrow up) in Git tab
+2. Pushes all local commits to GitHub
+
+
+```{r}
+#| label: git-push-rstudio
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/21_push.png")
+```
+:::
+
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Add a remote (publish to GitHub - only once):
+
+1. Click [Publish repository]{.text-highlight-prussian_blue} button
+2. Choose organization (if applicable)
+3. Set repository name
+4. Choose public/private
+5. Click [Publish]{.text-highlight-asparagus}
+
+Push changes (after first publish):
+
+Click [Push origin]{.text-highlight-moonstone} button (top right)
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-publish
+knitr::include_graphics("https://docs.github.com/assets/cb-54091/mw-1440/images/help/desktop/publish-repository.webp")
+```
+:::
+
+::::
+
+### Command line
+
+Add a remote to existing local repo (only once):
+
+```{bash}
+#| label: git-mk-remote-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git remote add origin https://github.com/<OWNER>/<REPO>
+```
+
+Push local to remote (GitHub):
+
+```{bash}
+#| label: git-push-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git push
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Publish repo to GitHub using `usethis::use_github()`
+2. Make new commit(s)
+3. Push changes to remote
+:::
+
+`r countdown(minutes = 20)`
+
+# [GitHub Intermezzo]{.bold .r-fit-text} {.title}
+
+## A GitHub repo
+
+```{r}
+#| label: github-intermezzo
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/10_new_repo.png")
+```
+
+::: footer
+[biostats: Version control with GitHub and RStudio](https://biostats-r.github.io/biostats/github/1_Git_Tutorial.html)
+:::
+
+## GitHub creating a repo (repo first)
+
+```{r}
+#| label: gh-mk-repo-new
+include_local_figure("GitHub/01_new_button.png")
+```
+
+## GitHub creating a repo (repo first)
+
+```{r}
+#| label: gh-mk-repo-owner
+include_local_figure("GitHub/03_owner.png")
+```
+
+## GitHub creating a repo (repo first)
+
+```{r}
+#| label: gh-mk-repo-name
+include_local_figure("GitHub/04_name.png")
+```
+
+## GitHub creating a repo (repo first)
+
+```{r}
+#| label: gh-mk-repo-visibility
+include_local_figure("GitHub/05_visibility.png")
+```
+
+## GitHub creating a repo (repo first)
+
+**README** - description of the project
+
+**.gitignore** - list of files ignored by GitHub (more about it later)
+
+**license** - tell others what they can do with your code
+
+```{r}
+#| label: gh-mk-repo-readme
+include_local_figure("GitHub/06_readme.png")
+```
+
+## GitHub creating a repo (repo first)
+
+```{r}
+#| label: gh-mk-repo-final
+include_local_figure("GitHub/07_final_click.png")
+```
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Create a new repo on GitHub
+2. Delete a repo on GitHub
+:::
+
+`r countdown(minutes = 10)`
+
+## Sharing your repo
+
+```{r}
+#| label: GH-team-admin-roles
+include_local_figure("Github/GH_team_admin.png")
+```
+
+::: footer
+[GitHub Docs](https://github.com/features/#features-team-administration)
+:::
+
+## Roles (permissions)
+
+```{r}
+#| label: GH-team-admin-roles3
+knitr::include_graphics("https://cdn.prod.website-files.com/65cb70dea86ef31d62e7ad25/65dc9790deb55bea60f20179_630d23aa00443e4276226ebd_pre-defined_roles_f859b878b8d94a5a98737bd2c66493e2_1000.png")
+```
+
+::: footer
+[GitHub Advanced Security - Secret Scanning](https://www.liatrio.com/resources/blog/github-advanced-security-secret-scanning)
+:::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Add someone as a collaborator to your repo
+2. Remove the collaborator
+:::
+
+`r countdown(minutes = 10)`
+
+## Update local - PULL 
+
+```{r}
+#| label: git-many-clones
+knitr::include_graphics("https://sfdctechie.wordpress.com/wp-content/uploads/2019/12/github.png")
+```
+
+::: footer
+[sfdc techie – Pavan's blog](https://sfdctechie.wordpress.com/2019/12/27/how-to-add-a-salesforce-dx-project-to-source-control-step-by-step-guide/)
+:::
+
+## Update local - PULL 
+
+```{r}
+#| label: git-pull
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/gittutorial/22_workflow2.png")
+```
+
+::: footer
+[biostats: Version control with GitHub and RStudio](https://biostats-r.github.io/biostats/github/1_Git_Tutorial.html)
+:::
+
+## Update local - PULL 
+
+Now we need to *sync* changes from the [remote]{.text-highlight-asparagus} to [local]{.text-highlight-moonstone} using [**PULL**]{.text-highlight-prussian_blue}
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: columns
+::: {.column width="50%"}
+Pull from remote (GitHub) to local:
+
+1. Click [Pull]{.text-highlight-prussian_blue} button (blue arrow down) in Git tab
+2. Downloads (and merges) changes from GitHub
+3. Updates your local files automatically
+
+**Always pull before starting new work to get latest changes**
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| label: git-pull-rstudio
+knitr::include_graphics("https://annakrystalli.me/talks/assets/git_tab.png")
+```
+:::
+::::
+
+### GitHub Desktop
+
+Click [Fetch origin]{.text-highlight-prussian_blue} button to check for changes
+
+If changes available, click [Pull origin]{.text-highlight-asparagus} button
+
+GitHub Desktop automatically fetches periodically
+
+```{r}
+#| label: ghd-fetch
+knitr::include_graphics("https://docs.github.com/assets/cb-24440/mw-1440/images/help/desktop/pull-button.webp")
+```
+
+### Command line
+
+Pull from remote (GitHub) to local:
+
+```{bash}
+#| label: git-pull-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git pull
+```
+
+:::::
+
+
+# [.gitignore]{.bold .r-fit-text} {.title}
+
+## `.gitignore` file
+
+A guide to [git]{.text-highlight-prussian_blue} which files [**should be ignored for detecting changes**]{.text-highlight-asparagus}
+
+Here is an example of a **.gitignore** file:
+```{bash}
+#| label: gitignore
+#| echo: true
+#| eval: false
+#| code-line-numbers: true
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+
+# RStudio files
+.Rproj.user/
+
+# OAuth2 token
+.httr-oauth
+.Rproj.user
+
+# Data (excludes everything in the folder data)
+data/*
+
+# You can make exceptions for specific files
+!data/dragon_taxonomy.csv
+
+# Figures & output (excludes all figure files)
+*.png
+*.pdf
+*.jpeg
+```
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Create a `.gitignore` file in your repo
+2. Add rules to ignore specific files (e.g., `data/` folder)
+3. Verify that ignored files are not tracked by Git
+:::
+
+`r countdown(minutes = 5)`
+
+## Key takeaways
+
+::: {.incremental}
+
+1. **Git tracks everything** - Version control creates a complete history of your work
+2. **Commits are snapshots** - Save meaningful checkpoints with descriptive messages
+3. **Push and Pull** - Sync your local work with remote repositories to collaborate effectively
+
+:::
+
+
+## [Peer Debrief]{.text-size-heading2 .text-center} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Discuss in your group: "[What is the essential idea or mechanism we learned in this session?]{.text-highlight-asparagus}"
+2. Complete the [Template](https://github.com/orgs/CUNI-SPRouT/discussions/12#discussion-9165349) collaboratively
+3. Post your group's Debrief as a reply [to the following post](https://github.com/orgs/CUNI-SPRouT/discussions/12#discussioncomment-15475365)
+:::
+
+`r countdown(minutes = 10)`
+
+# [AFTERNOON SESSION]{.bold .r-fit-text} {.title}
+
+[Branches & Collaboration]{.r-fit-text}
+
+## Afternoon Learning Outcomes
+
+<br>
+
+:::: {.columns}
+
+::: {.column width="45%" .incremental}
+
+### 🎯 **What we'll cover**
+
+- Merge conflicts
+- Working with branches
+- Pull Requests (PR) workflow
+- Code review process
+- Merging strategies
+- Handling mistakes and undoing commits
+- {usethis} workflows
+
+:::
+
+::: {.column width="55%" .incremental}
+
+### ✅ **By the end, you'll be able to:**
+
+- Resolve merge conflicts
+- Create and switch between branches, and delete them
+- Collaborate effectively using branches and Pull Requests
+- Undo commits when needed
+- Use {usethis} PR helpers (`pr_init()`, `pr_push()`, `pr_finish()`)
+
+:::
+::::
+
+
+# [Merge Conflicts]{.bold .r-fit-text} {.title}
+
+## Merge conflict 💩💩💩
+
+```{r}
+#| label: git-merge-conflict-vis
+knitr::include_graphics("https://www.simplilearn.com/ice9/free_resources_article_thumb/pull-push.JPG")
+```
+
+A [merge conflict]{.text-highlight-prussian_blue} can occur when you are changing the [same line]{.text-highlight-asparagus} in one file [differently]{.text-highlight-moonstone}.
+
+:::footer
+[https://www.simplilearn.com/](https://www.simplilearn.com/tutorials/git-tutorial/merge-conflicts-in-git)
+:::
+
+## Merge conflict 💩💩💩
+
+<br>
+
+```{bash}
+#| label: git-merge-conflict
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+To https://github.com/picardis/myrepo.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'https://github.com/picardis/myrepo.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+```
+
+:::: columns
+
+::: {.column width="50%" .fragment}
+A good strategy to avoid such conflicts: 
+
+* Commit often
+* Work in small steps
+* Push and pull regularly
+* Organize your code in small modules (scripts)
+:::
+
+::: {.column width="50%" .fragment}
+<br>
+
+Merge conflicts cannot always be avoided (but can be mitigated by [branches]{.text-highlight-prussian_blue}; later).
+:::
+::::
+
+## Merge conflict 💩💩💩
+
+```{bash}
+#| label: git-merge-conflict-example
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+If you have questions, please
+<<<<< HEAD
+open an issue
+=======
+ask your question in IRC.
+>>>>> branch-a
+```
+
+::: {.fragment}
+
+Delete the unwanted text (including the *decorations*)
+
+```{bash}
+#| label: git-merge-conflict-example-solution
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+If you have questions, please
+ask your question in IRC.
+```
+
+Then **save the file**, **stage**, and **commit** again 
+
+:::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+Simulate and solve merge conflict in teams:
+
+:::{.blockquote}
+1. Choose a file in [`CUNI-SPRouT/VersionControl-playground/merge_conflict`](https://github.com/CUNI-SPRouT/VersionControl-playground/tree/main/merge_conflict). Each Team has to choose the same file.
+2. Everyone edit the file and push the changes
+3. Fix the merge conflict (together on one PC) 
+:::
+
+`r countdown(minutes = 20)`
+
+# [Handling Mistakes]{.bold .r-fit-text} {.title}
+
+## Ups! I have made a mistake 😮
+
+How to undo last commit?
+
+[Variant A]{.text-highlight-prussian_blue}: I committed but **NOT** [pushed yet]{.text-highlight-moonstone}.
+
+::::: {.panel-tabset}
+
+### RStudio
+
+Use the [Terminal]{.text-highlight-prussian_blue} (NOT console):
+
+1. Go to [Tools]{.text-highlight-asparagus} → [Terminal]{.text-highlight-moonstone} → [New Terminal]{.text-highlight-tea_green}
+2. Run 
+```{bash}
+#| label: git-undo-commit-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git reset --soft HEAD@{1}
+```
+3. This undoes the commit but [keeps your changes]{.text-highlight-prussian_blue}
+4. Files remain staged and ready to commit again
+
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Go to [History]{.text-highlight-prussian_blue} tab
+2. Right-click on the commit to undo
+3. Select [Undo Commit]{.text-highlight-asparagus}
+
+This keeps your changes, just removes the commit
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-undo
+knitr::include_graphics("https://docs.github.com/assets/cb-12506/mw-1440/images/help/desktop/undo-commit.webp")
+```
+:::
+
+::::
+
+### Command line
+
+```{bash}
+#| label: git-undo-commit-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git reset --soft HEAD@{1}
+```
+
+:::::
+
+## Ups! I have made a mistake 😮
+
+How to undo last commit?
+
+[Variant B]{.text-highlight-asparagus}: I committed **AND** [pushed already]{.text-highlight-moonstone}.
+
+::::: {.panel-tabset}
+
+### RStudio
+
+Use the [Terminal]{.text-highlight-prussian_blue} again:
+
+1. View commit history in Git tab → [History]{.text-highlight-asparagus}
+2. Copy the [SHA]{.text-highlight-moonstone} (commit ID) of the commit you want to go back to
+```{bash}
+#| label: git-reset-commit-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git reset --hard <SHA>
+```
+3. ⚠️ This [permanently removes]{.text-highlight-wisteria} changes after that commit
+4. Force push required:
+```{bash}
+#| label: git-reset-commit-rstudio-force
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git push --force
+```
+
+[Use with caution]{.text-highlight-wisteria} - this rewrites history!
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+⚠️ [More complex]{.text-highlight-prussian_blue} - you need to:
+
+1. [Revert]{.text-highlight-asparagus} the commit (creates new commit that undoes changes)
+2. History → Right-click commit → [Revert Changes in Commit]{.text-highlight-moonstone}
+
+This creates a new commit that reverses the changes
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-revert
+knitr::include_graphics("https://docs.github.com/assets/cb-130280/mw-1440/images/help/desktop/history-tab-in-commit-sidebar.webp")
+```
+:::
+
+::::
+
+### Command line
+
+Copy the **SHA** of the last commit
+
+```{bash}
+#| label: git-reset-commit-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git reset --hard <SHA>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+Undo/Revert commit
+:::
+
+`r countdown(minutes = 15)`
+
+# [Branches]{.bold .r-fit-text} {.title}
+
+## Branches
+
+```{r}
+#| label: git-branches
+knitr::include_graphics("https://miro.medium.com/v2/resize:fit:640/format:webp/1*T4HW6dnJQQz2c2soc4AeFQ.png")
+```
+
+:::footer
+[Git For Dummies](https://nicholas0010.medium.com/git-for-dummies-2-2-2874e625bf65)
+:::
+
+## Branches
+
+```{r}
+#| label: git-branches-funny
+knitr::include_graphics("https://coderefinery.github.io/git-intro/_images/gophers.png")
+```
+
+:::footer
+[coderefinery](https://coderefinery.github.io/git-intro/commits/)
+:::
+
+## Make a branch
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: columns
+::: {.column width="50%"}
+1. Click the [branch icon]{.text-highlight-prussian_blue} in Git tab (purple with two branches)
+2. Or click [New Branch]{.text-highlight-asparagus} button
+3. Enter [branch name]{.text-highlight-moonstone}
+4. Choose to sync with remote (optional)
+5. RStudio automatically switches to new branch
+
+Branch name should be descriptive (e.g., `update-analysis-with-circular-plot`)
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: git-make-branch-rstudio
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/fork_branch_tutorial/5_make_new_branch.png")
+```
+
+```{r}
+#| label: git-make-branch2-rstudio
+knitr::include_graphics("https://biostats-r.github.io/biostats/github/Pics/fork_branch_tutorial/6_name_branch.png")
+```
+:::
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Click [Current Branch]{.text-highlight-prussian_blue} dropdown (top)
+2. Click [New Branch]{.text-highlight-asparagus} button
+3. Enter branch name
+4. Choose to create from current branch
+5. Click [Create Branch]{.text-highlight-moonstone}
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-new-branch
+knitr::include_graphics("https://docs.github.com/assets/cb-26427/mw-1440/images/help/desktop/new-branch-button-mac.webp")
+```
+:::
+
+::::
+
+### Command line
+
+```{bash}
+#| label: git-make-branch-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git branch <BRANCH-NAME>
+```
+
+:::::
+
+## Switching between branches
+
+The default branch is called [main]{.text-highlight-asparagus} or [master]{.text-highlight-asparagus}
+
+Switching between branches is sometimes called ([checkout]{.text-highlight-moonstone})
+
+‼️⚠️ Make sure that you have all changes committed before switching ⚠️‼️
+
+::::: {.panel-tabset}
+
+### RStudio
+
+:::: columns
+::: {.column width="50%"}
+1. Click the [branch dropdown]{.text-highlight-prussian_blue} in Git tab (top right)
+2. Shows list of available branches
+3. Select branch to switch to
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: git-switch-branch-rstudio
+knitr::include_graphics("https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/img/ChangeBranch.png")
+```
+:::
+::::
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+1. Click [Current Branch]{.text-highlight-prussian_blue} dropdown (top)
+2. Select branch from list
+3. Or search for branch name
+
+Branch switches automatically
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-switch-branch
+knitr::include_graphics("https://docs.github.com/assets/cb-38142/mw-1440/images/help/desktop/select-branch-from-dropdown.webp")
+```
+:::
+
+::::
+
+### Command line
+
+```{bash}
+#| label: git-switch-branch-cl
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git checkout <BRANCH-NAME>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Make a branch and switch
+2. Commit changes
+3. Push to remote
+:::
+
+`r countdown(minutes = 20)`
+
+# [Pull Requests]{.bold .r-fit-text} {.title}
+
+## Merging branches
+
+```{r}
+#| label: git-merge-branch-scheme
+knitr::include_graphics("https://media.geeksforgeeks.org/wp-content/uploads/20230516192737/git-three-way-merging.png")
+```
+
+## Merging branches
+
+```{r}
+#| label: git-merge-branch-scheme2
+knitr::include_graphics("https://www.yakuter.com/wp-content/yuklemeler/1_sMJbSt3sLrC-sIsPOVRBdw.png")
+```
+
+## Pull Request (PR)
+
+Request to merge a branch
+
+```{r}
+#| label: git-pull-request-scheme
+knitr::include_graphics("https://crunchify.com/wp-content/uploads/2017/09/Github-WorkFlow-Tips-Crunchify-Tips.png")
+```
+
+## Pull Request - create
+
+After you **push** a new branch, you should have a green button [Compare & pull request]{.text-highlight-asparagus} on GitHub
+
+```{r}
+#| label: git-pull-request-create
+knitr::include_graphics("https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/img/CreatePullReq.png")
+```
+
+::: footer
+[Aberdeen Study Group](https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/VersionControl/)
+:::
+
+## Pull Request - components
+
+```{r}
+#| label: git-pull-request-components
+knitr::include_graphics("https://www.dummies.com/wp-content/uploads/github-open-pull-request.jpg")
+```
+
+::: footer
+[GitHub for dummies](https://www.dummies.com/article/technology/programming-web-design/general-programming-web-design/what-are-github-pull-requests-264741/)
+:::
+
+## Pull Request - Overview
+
+Now you can [add more commits]{.text-highlight-prussian_blue} on GitHub, add [Comment]{.text-highlight-asparagus} to start discussion, or [merge]{.text-highlight-tea_green} the branch.
+
+```{r}
+#| label: git-pull-request-overview
+knitr::include_graphics("https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/img/Merge.png")
+```
+
+::: footer
+[Aberdeen Study Group](https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/VersionControl/)
+:::
+
+## Note on Markdown {.bg-light_blue}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+You can use [Markdown]{.text-highlight-prussian_blue} on GitHub in the description and comments
+
+More details on [Github Docs](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: markdown-syntax-pr
+include_local_figure("Markdown/Markdown_syntax.png")
+```
+:::
+::::
+
+::: footer
+[https://arminreiter.com/](https://arminreiter.com/resources/)
+:::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Create a PR
+:::
+
+`r countdown(minutes = 25)`
+
+# [Code Review]{.bold .r-fit-text} {.title}
+
+## Pull Request - review
+
+A tool to [review]{.text-highlight-prussian_blue} on GitHub [suggested]{.text-highlight-asparagus} changes
+
+```{r}
+#| label: git-pull-request-scheme2
+knitr::include_graphics("https://atlassianblog.wpengine.com/wp-content/uploads/bitbucket411-blog-1200x-branches2.png")
+```
+
+::: footer
+[https://www.atlassian.com/](https://www.atlassian.com/blog/bitbucket/5-pull-request-must-haves)
+:::
+
+## Collaboration
+
+```{r}
+#| label: GH-team-admin-roles-teaching2
+include_local_figure("Scriberia/FirstPullRequest.jpg")
+```
+
+::: footer
+[This image was created by Scriberia for The Turing Way community and is used under a CC-BY licence](https://zenodo.org/doi/10.5281/zenodo.3332807)
+:::
+
+## Pull Request - review
+
+On [someone else's PR]{.text-highlight-prussian_blue} on GitHub, you can comment on **individual lines** or **whole files**
+
+```{r}
+#| label: git-pull-request-review
+include_local_figure("GitHub/5_review.png")
+```
+
+## Pull Request - review
+
+```{r}
+#| label: git-pull-request-add-comments
+include_local_figure("GitHub/Example-comments-on-GitHub_W640.jpg")
+```
+
+::: footer
+[What Are They Talking About? Analyzing Code Reviews in Pull-Based Development Model](http://dx.doi.org/10.1007/s11390-017-1783-2)
+:::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Make a PR
+2. Invite your partners as collaborators to your repo
+3. request a review from your partners
+4. Make a comment on PR of your partners
+5. Make a comment on a file in PR of your partners
+:::
+
+`r countdown(minutes = 20)`
+
+# [Merging Branches]{.bold .r-fit-text} {.title}
+
+## Merge conflict with branch 💩
+
+Merge conflict with branches is much more pleasant 😎
+
+```{r}
+#| label: git-pull-request-review2
+include_local_figure("GitHub/4_merge_conflict.png")
+```
+
+## Merge conflict with branch 💩
+
+Edit the file as needed
+
+```{r}
+#| label: git-merge-conflict-gh-2
+include_local_figure("GitHub/5_conflict.png")
+```
+
+## Merge conflict with branch 💩
+
+Commit the changes
+
+```{r}
+#| label: git-merge-conflict-gh-3
+include_local_figure("GitHub/7_solved.png")
+```
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Merge a branch
+:::
+
+`r countdown(minutes = 10)`
+
+## Delete branch
+
+We can delete branch directly on GitHub after merging
+
+```{r}
+#| label: git-pull-request-delete-branch
+knitr::include_graphics("https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/img/DeleteBranch.png")
+```
+
+::: footer
+[Aberdeen Study Group](https://aberdeenstudygroup.github.io/studyGroup/lessons/SG-T1-GitHubVersionControl/VersionControl/)
+:::
+
+## Delete branch
+
+We can also delete branch **before** merging
+
+::::: {.panel-tabset}
+
+### RStudio
+
+Use the [Terminal]{.text-highlight-prussian_blue} (NOT console):
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+To delete a [local]{.text-highlight-asparagus} branch:
+
+1. Switch to different branch first
+2. delete the branch
+```{bash}
+#| label: git-delete-branch-local-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git branch -d <BRANCH-NAME>
+```
+
+:::
+
+::: {.column width="50%"}
+To delete a [remote]{.text-highlight-moonstone} branch on GitHub:
+
+1. Remove the branch from GitHub
+```{bash}
+#| label: git-delete-branch-remote-rstudio
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git push origin --delete <BRANCH-NAME>
+```
+
+:::
+
+::::
+
+⚠️ Cannot delete the branch you're currently on
+
+### GitHub Desktop
+
+:::: {.columns}
+
+::: {.column width="50%"}
+To delete a [local]{.text-highlight-asparagus} branch:
+
+1. Switch to different branch first
+2. [Current Branch]{.text-highlight-prussian_blue} dropdown
+3. Right-click on branch to delete
+4. Select [Delete]{.text-highlight-moonstone}
+
+To delete a [remote]{.text-highlight-prussian_blue} branch:
+
+Delete on GitHub website (after merging PR)
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: ghd-delete-branch
+knitr::include_graphics("https://docs.github.com/assets/cb-28505/mw-1440/images/help/desktop/delete-branch-win.webp")
+```
+:::
+
+::::
+
+### Command line
+
+To delete a [local]{.text-highlight-asparagus} branch
+
+```{bash}
+#| label: git-delete-branch-local-cl2
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git branch -d <BRANCH-NAME>
+```
+
+To delete a [remote]{.text-highlight-prussian_blue} on GitHub branch
+
+```{bash}
+#| label: git-delete-branch-remote-cl2
+#| echo: true
+#| eval: false
+#| code-line-numbers: false
+git push origin --delete <BRANCH-NAME>
+```
+
+:::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+1. Delete a branch
+:::
+
+`r countdown(minutes = 10)`
+
+## Merging strategies
+
+:::: columns
+
+::: {.column width="34%"}
+Merge commit
+```{r}
+#| label: git-merge-strategy-merge
+knitr::include_graphics("https://lukemerrett.com/content/images/2021/08/906613c7-94fb-41a8-9c74-77895dec7f53.png")
+```
+:::
+
+::: {.column width="34%" .fragment}
+Squash & Merge
+```{r}
+#| label: git-merge-strategy-squash
+knitr::include_graphics("https://lukemerrett.com/content/images/2021/08/fa7e8e52-7037-40f9-a1fd-3dcc916d9840.png")
+```
+:::
+
+::: {.column width="30%" .fragment}
+Rebase & Merge
+```{r}
+#| label: git-merge-strategy-rebase
+knitr::include_graphics("https://lukemerrett.com/content/images/2021/08/c44e8334-f187-4386-8946-d7996f883de3.png")
+```
+:::
+
+::::
+
+::: footer
+[Luke Merrett](https://lukemerrett.com/different-merge-types-in-git/)
+:::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Make a branch
+2. Do several commits
+3. try Squash & Merge
+:::
+
+`r countdown(minutes = 10)`
+
+
+# [Advanced Workflows]{.bold .r-fit-text} {.title}
+
+## PR workflow with {usethis}
+
+```{r}
+#| label: git-pr-helpers
+knitr::include_graphics("https://www.garrickadenbuie.com/blog/pull-request-flow-usethis/usethis-pr-flow-medium.jpg")
+```
+
+::: footer
+[Pull Request Flow with usethis](https://www.garrickadenbuie.com/blog/pull-request-flow-usethis)
+:::
+
+## {usethis} PR workflow - detailed
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+### Start working on a PR
+
+```{r}
+#| label: usethis-pr-init
+#| echo: true
+#| eval: false
+# Create new branch and switch to it
+usethis::pr_init("my-feature")
+
+# Make changes, commit them
+# ...
+
+# Push branch to GitHub and create PR
+usethis::pr_push()
+```
+
+:::
+
+::: {.column width="50%" .fragment}
+
+### Finish and clean up
+
+```{r}
+#| label: usethis-pr-finish
+#| echo: true
+#| eval: false
+# After PR is merged on GitHub
+# This will:
+# - Switch back to main
+# - Pull latest changes
+# - Delete local branch
+usethis::pr_finish()
+```
+
+:::
+
+::::
+
+## [Practical Exercise]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+:::{.blockquote}
+Use `usethis::pr_*` workflow to:
+
+1. Create a new branch with `pr_init()`
+2. Make changes and commit
+3. Push and create PR with `pr_push()`
+4. After merging, clean up with `pr_finish()`
+:::
+
+`r countdown(minutes = 20)`
+
+## GitHub tools suite
+
+:::: {.columns}
+
+::: {.column width="20%"}
+```{r}
+#| label: gh_logo3
+include_local_figure("Logos/GH_logo.png")
+```
+:::
+
+::: {.column width="80%"}
+```{r}
+#| label: project-management-tools-gh
+include_local_figure("Github/GH_management.png")
+```
+:::
+
+::::
+
+::: footer
+[wiki](https://commons.wikimedia.org/wiki/File:Github-desktop-logo-symbol.svg) | [Getting started with project planning on GitHub](https://github.blog/developer-skills/github/getting-started-with-project-planning-on-github/)
+:::
+
+## This is just a teaser
+
+GitHub has a lot of [features]{.text-highlight-prussian_blue} and [tools]{.text-highlight-asparagus} to make your life easier:
+
+* Project management
+* Task management  
+* Collaboration
+* Dissemination
+* Automation
+* ...
+
+::: {.fragment .text-center}
+More on Day 5!!! 🤩
+:::
+
+
+
+## [Peer Debrief]{.text-size-heading2 .text-center} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Discuss in your group: "[What is the essential idea or mechanism we learned in this session?]{.text-highlight-asparagus}"
+2. Complete the [Template](https://github.com/orgs/CUNI-SPRouT/discussions/12#discussion-9165349) collaboratively
+3. Post your group's Debrief as a reply [to the following post](https://github.com/orgs/CUNI-SPRouT/discussions/12#discussioncomment-15475366)
+:::
+
+`r countdown(minutes = 10)`
+
+# [Mini-Project]{.bold .r-fit-text} {.title}
+
+## Day 3 Mini-Project
+
+**Your challenge:**
+
+Apply version control to a messy research project!
+
+:::: {.columns}
+
+::: {.column width="70%"}
+**What you'll do:**
+
+- [Initialize Git]{.text-highlight-prussian_blue} in an existing project
+- [Create meaningful commits]{.text-highlight-asparagus} with good messages
+- [Set up GitHub remote]{.text-highlight-moonstone} and push
+- [Work with branches]{.text-highlight-tea_green} and Pull Requests
+- [Handle merge conflicts]{.text-highlight-wisteria}
+
+:::
+
+::: {.column width="30%"}
+**Plus Days 1 & 2 concepts:**
+
+- Good project structure
+- Code hygiene
+- {usethis} helpers
+:::
+
+::::
+
+## [Mini-Project]{.text-size-heading2} {.exercise .text-center}
+
+<br>
+
+::: {.blockquote}
+1. Download the [Day3-mini_project](https://github.com/CUNI-SPRouT/Day3-mini_project) from GitHub [DO NOT CLONE!]{.text-highlight-black}
+2. In your groups, set up version control for this project
+3. Create a workflow with branches and PRs
+4. Document your workflow
+5. **Post to [GitHub Discussions](https://github.com/orgs/CUNI-SPRouT/discussions/15):**
+   - Link to your repository
+   - Screenshot of your commit history
+   - Description of your branching strategy
+:::
+
+`r countdown(minutes = 30)`
+
+
+# [Outro]{.bold .r-fit-text} {.title}
+
+## Key takeaways
+
+::: {.incremental}
+
+1. **Version control is essential** - Never lose your work again
+2. **Commit often with good messages** - Tell the story of your project
+3. **Branches enable safe experimentation** - Work freely without breaking main
+4. **Pull Requests facilitate collaboration** - Review before merging
+5. **{usethis} streamlines workflows** - Use R-specific helpers
+6. **GitHub is more than storage** - It's a collaboration platform
+
+:::
+
+## Resources
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+### 📚 **Learning Materials**
+
+- [Happy Git and GitHub for the useR](https://happygitwithr.com/)
+- [Pro Git book](https://git-scm.com/book/en/v2)
+- [GitHub Docs](https://docs.github.com/)
+- [{usethis} documentation](https://usethis.r-lib.org/)
+
+:::
+
+::: {.column width="50%"}
+
+### 🛠️ **Tools & Helpers**
+
+- [GitHub Desktop](https://desktop.github.com/)
+- [Git Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf)
+- [Visualizing Git](https://git-school.github.io/visualizing-git/)
+
+:::
+
+::::
+
+## SPROuT
+
+This presentation is part of the [SPROuT](https://github.com/CUNI-SPRouT) taught at Charles University.
+
+```{r}
+#| label: sprout-logo-outro
+include_local_figure("Logos/sprout_logo_nobg.png")
+```
+
+## About me
+
+:::: {.columns}
+
+::: {.column width="25%"}
+```{r}
+#| label: personal sticker
+include_local_figure("About/Ondrej_Mottl-transparent-shadow.png")
+```
+
+```{r}
+#| label: linktree QR reuse
+include_local_figure("QR/qr_personal_web.svg")
+```
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="70%"}
+[Ondřej Mottl]{.bold .r-fit-text .text-color-black}
+
+Assistant Professor at [Charles University](https://cuni.cz/UK-1.html)
+
+Head of the 🧑‍💻 [Laboratory of Quantitative Ecology](https://ondrejmottl.github.io/lab/about_the_lab.html)
+
+* 📧 Ondrej.mottl(at)gmail.com
+* 🦋 [ondrejmottl.bsky.social](https://bsky.app/profile/ondrejmottl.bsky.social)
+* 🐱 [Github](https://github.com/OndrejMottl)
+* 🆔 [ORCID](https://orcid.org/0000-0002-9796-5081)
+* 🌐 [Personal webpage](https://ondrejmottl.github.io/)
+:::
+
+::::
