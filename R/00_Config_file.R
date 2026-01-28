@@ -43,6 +43,9 @@ if (
   # renv::snapshot(lockfile =  "renv.lock")  # do only for update
 }
 
+# deactivating renv
+renv::deactivate()
+
 # Define packages
 package_list <-
   c(
@@ -66,6 +69,7 @@ package_list <-
 # Attach all packages
 sapply(package_list, library, character.only = TRUE)
 
+install.packages("languageserver")
 
 #----------------------------------------------------------#
 # 2. Define space -----
